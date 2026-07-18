@@ -18,7 +18,31 @@ from huaweicloudsdkvpc.v2 import (
 )
 
 # ========== 配置 ==========
-# 华为云凭据从环境变量读取，不硬编码进代码。运行前需设置（见 .env.example）：
+def _load_dotenv():
+    """若同目录存在 .env，把其中 KEY=VALUE / export KEY=VALUE 载入环境（不覆盖已存在的）。
+
+    仅做最小解析，避免引入 python-dotenv 依赖；真实环境变量优先于 .env。
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(path):
+        return
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("export "):
+                line = line[len("export "):]
+            if "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+_load_dotenv()
+
+# 华为云凭据从环境变量读取，不硬编码进代码。运行前需设置（见 .env.example），
+# 或在同目录放一份 .env（已被 .gitignore 排除，不会进仓库）：
 #   export HW_ECS_AK=...  HW_ECS_SK=...  HW_ECS_PROJECT_ID=...
 AK = os.environ.get("HW_ECS_AK")
 SK = os.environ.get("HW_ECS_SK")
